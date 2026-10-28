@@ -1,62 +1,85 @@
 @import "tailwindcss";
 
 /*
- * 해리포터(마법학교) 테마.
- * 사이트 전체는 "촛불 켜진 성의 밤" (다크), 강조 패널(.parchment)은 "양피지" (라이트).
- * slate 팔레트를 따뜻한 잉크·양피지 톤으로 덮어써서 기존 text-slate-* 클래스가 그대로 테마를 따른다.
- * .parchment 안에서는 같은 변수를 뒤집어 짙은 잉크 글씨가 되도록 한다.
+ * 갈레온 증권 — 모던 다크 테마.
+ * 깊은 한밤의 남색 바탕 + 은은한 오로라 빛 + 별 반짝임으로 "마법학교의 밤"을 표현하고,
+ * 금색(갈레온)은 잔고·총자산 같은 핵심 숫자에만 아껴 쓴다.
+ * 기존 text-slate-* 클래스가 그대로 테마를 따르도록 slate 팔레트를 남색 기운이 도는 중성색으로 덮어쓴다.
  */
 @theme {
-  --color-ink: #120e0b;
-  --color-parchment: #f1e4c3;
-  --color-gold: #e2bd68;
-  --color-gold-bright: #f5dc9c;
-  --color-burgundy: #6e1b28;
-  --color-rise: #f47a6e;
-  --color-fall: #72aaf2;
-  /* 버튼 배경처럼 흰 글씨를 올리는 곳에 쓰는 진한 등락 색 */
-  --color-rise-deep: #a8281f;
-  --color-fall-deep: #1f4f99;
+  /* 바탕 · 표면 */
+  --color-ink: #070815;
+  --color-night: #0c0e22;
+  --color-surface: #12142b;
+  --color-surface-2: #1a1d3a;
 
-  /* 따뜻한 잉크·양피지 톤 (기존 slate 클래스가 이 값을 쓴다) */
-  --color-slate-50: #fbf5e6;
-  --color-slate-100: #f4ead3;
-  --color-slate-200: #e9dcc0;
-  --color-slate-300: #d8c6a2;
-  --color-slate-400: #b8a581;
-  --color-slate-500: #9a876a;
-  --color-slate-600: #66563f;
-  --color-slate-700: #43382a;
-  --color-slate-800: #2b231a;
-  --color-slate-900: #1c1611;
-  --color-slate-950: #120e0b;
+  /* 마법 강조색 (보라 → 하늘) */
+  --color-magic: #9b8cff;
+  --color-magic-bright: #c4baff;
+  --color-sky: #7dd3fc;
 
-  --font-sans: var(--font-gowun), ui-serif, "Nanum Myeongjo", "AppleMyungjo", Georgia, serif;
-  --font-display: var(--font-cinzel), var(--font-gowun), ui-serif, "Nanum Myeongjo", "AppleMyungjo", Georgia, serif;
-  /* 숫자(주가)는 고정폭 숫자가 확실한 시스템 산세리프로 */
-  --font-num: ui-sans-serif, system-ui, -apple-system, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", sans-serif;
+  /* 갈레온 금색 — 아껴 쓴다 */
+  --color-gold: #f5c451;
+  --color-gold-bright: #ffe29a;
+
+  /* 한국식 등락 색 (다크 배경 대비 4.5:1 이상) */
+  --color-rise: #ff6b6b;
+  --color-fall: #5b9bff;
+  /* 흰 글씨를 올리는 버튼 배경용 */
+  --color-rise-deep: #e5334b;
+  --color-fall-deep: #2f6fec;
+
+  /* 남색 기운의 중성 팔레트 */
+  --color-slate-50: #f6f7fc;
+  --color-slate-100: #eceefa;
+  --color-slate-200: #d9dcf0;
+  --color-slate-300: #b7bbd8;
+  --color-slate-400: #8d92b4;
+  --color-slate-500: #6b7095;
+  --color-slate-600: #4b4f70;
+  --color-slate-700: #333652;
+  --color-slate-800: #22243d;
+  --color-slate-900: #15172c;
+  --color-slate-950: #0a0b1a;
+
+  --font-sans:
+    var(--font-geist-sans), "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui,
+    "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  --font-display: var(--font-sans);
+  --font-num: var(--font-geist-sans), "Pretendard Variable", Pretendard, ui-sans-serif, system-ui, sans-serif;
+
+  --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --animate-shimmer: shimmer 1.6s ease-in-out infinite;
+  --animate-fade-up: fade-up 0.5s var(--ease-spring) both;
+  --animate-pulse-dot: pulse-dot 1.8s ease-in-out infinite;
 }
 
 :root {
   color-scheme: dark;
 }
 
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
 body {
-  background:
-    /* 촛불 빛 */
-    radial-gradient(900px 520px at 12% -120px, rgb(226 160 72 / 0.2), transparent 70%),
-    radial-gradient(700px 460px at 95% -80px, rgb(110 27 40 / 0.35), transparent 70%),
-    radial-gradient(1000px 600px at 50% 120%, rgb(40 24 60 / 0.45), transparent 70%),
-    var(--color-ink);
+  background-color: var(--color-ink);
+  background-image:
+    radial-gradient(1100px 600px at 10% -10%, rgb(111 92 255 / 0.18), transparent 60%),
+    radial-gradient(900px 520px at 100% 0%, rgb(56 189 248 / 0.1), transparent 60%),
+    radial-gradient(1000px 700px at 50% 110%, rgb(168 85 247 / 0.1), transparent 60%);
   background-attachment: fixed;
   color: var(--color-slate-200);
   font-family: var(--font-sans);
+  font-feature-settings: "ss01", "cv11";
+  letter-spacing: -0.011em;
   /* 한글은 어절 단위로 줄바꿈 */
   word-break: keep-all;
   overflow-wrap: break-word;
 }
 
-/* 밤하늘 별 — 이미지 없이 그라데이션으로 */
+/* 별 반짝임 — 이미지 없이 그라데이션으로 */
 body::before {
   content: "";
   position: fixed;
@@ -64,108 +87,219 @@ body::before {
   z-index: -1;
   pointer-events: none;
   background-image:
-    radial-gradient(1px 1px at 23px 41px, rgb(255 240 210 / 0.8), transparent 60%),
-    radial-gradient(1px 1px at 151px 97px, rgb(255 240 210 / 0.6), transparent 60%),
-    radial-gradient(1.5px 1.5px at 87px 173px, rgb(245 220 156 / 0.7), transparent 60%),
-    radial-gradient(1px 1px at 203px 211px, rgb(255 240 210 / 0.5), transparent 60%),
-    radial-gradient(1px 1px at 261px 33px, rgb(255 240 210 / 0.55), transparent 60%);
+    radial-gradient(1px 1px at 23px 41px, rgb(255 255 255 / 0.7), transparent 60%),
+    radial-gradient(1px 1px at 151px 97px, rgb(196 186 255 / 0.6), transparent 60%),
+    radial-gradient(1.5px 1.5px at 87px 173px, rgb(255 226 154 / 0.55), transparent 60%),
+    radial-gradient(1px 1px at 203px 211px, rgb(255 255 255 / 0.45), transparent 60%),
+    radial-gradient(1px 1px at 261px 33px, rgb(125 211 252 / 0.5), transparent 60%);
   background-size: 290px 260px;
-  mask-image: linear-gradient(to bottom, black, transparent 75%);
-  opacity: 0.55;
+  mask-image: linear-gradient(to bottom, black, transparent 70%);
+  animation: twinkle 6s ease-in-out infinite alternate;
+}
+
+/* 천천히 흐르는 오로라 */
+body::after {
+  content: "";
+  position: fixed;
+  inset: -20% -10% auto;
+  height: 70vh;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(40% 50% at 30% 40%, rgb(124 108 255 / 0.16), transparent 70%),
+    radial-gradient(35% 45% at 70% 30%, rgb(45 212 191 / 0.08), transparent 70%);
+  filter: blur(40px);
+  animation: aurora 18s ease-in-out infinite alternate;
 }
 
 h1,
 h2,
 h3 {
-  letter-spacing: 0.01em;
+  letter-spacing: -0.025em;
 }
 
-/* 가격 숫자는 고정폭 + 산세리프로 또렷하게 */
+::selection {
+  background: rgb(155 140 255 / 0.35);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-magic);
+  outline-offset: 2px;
+}
+
+/* 가격 숫자는 고정폭 숫자로 또렷하게 */
 .tabular-nums {
   font-family: var(--font-num);
   font-variant-numeric: tabular-nums lining-nums;
+  letter-spacing: -0.01em;
 }
 
 /* 유틸리티 클래스(border-*, bg-* 등)로 덮어쓸 수 있도록 components 레이어에 둔다 */
 @layer components {
-  /* 어두운 패널 — 낡은 가죽 장정 느낌 */
+  /* 카드 표면 — 살짝 떠 있는 유리 느낌 */
   .panel {
-    background:
-      radial-gradient(120% 80% at 0% 0%, rgb(226 189 104 / 0.07), transparent 60%),
-      linear-gradient(180deg, rgb(255 236 200 / 0.045), rgb(255 236 200 / 0.015));
-    border: 1px solid rgb(226 189 104 / 0.16);
+    background: linear-gradient(180deg, rgb(255 255 255 / 0.05), rgb(255 255 255 / 0.025));
+    border: 1px solid rgb(255 255 255 / 0.07);
     box-shadow:
-      inset 0 1px 0 rgb(245 220 156 / 0.06),
-      0 10px 30px -12px rgb(0 0 0 / 0.6);
+      inset 0 1px 0 rgb(255 255 255 / 0.05),
+      0 20px 40px -24px rgb(0 0 0 / 0.8);
   }
 
-  /* 양피지 패널 — 안쪽에서는 잉크 색으로 뒤집힌다 */
-  .parchment {
-    --color-slate-50: #1a120a;
-    --color-slate-100: #24180d;
-    --color-slate-200: #34261a;
-    --color-slate-300: #4a3726;
-    --color-slate-400: #634c35;
-    --color-slate-500: #77603f;
-    --color-slate-600: #a08a64;
-    --color-slate-700: #c8b48b;
-    --color-slate-800: #dcc99f;
-    --color-slate-900: #e8d8b0;
-    --color-slate-950: #f4ead3;
-    --color-gold: #8a5a12;
-    --color-rise: #b3261e;
-    --color-fall: #1d4fa3;
-    color: var(--color-slate-200);
+  /* 강조 카드 — 오로라가 비치는 테두리 */
+  .panel-glow {
+    position: relative;
+    isolation: isolate;
     background:
-      radial-gradient(ellipse at 15% 10%, rgb(255 255 255 / 0.4), transparent 45%),
-      radial-gradient(ellipse at 85% 95%, rgb(139 92 38 / 0.22), transparent 55%),
-      radial-gradient(ellipse at 100% 0%, rgb(139 92 38 / 0.14), transparent 40%),
-      repeating-linear-gradient(0deg, rgb(120 85 40 / 0.035) 0 1px, transparent 1px 3px),
-      linear-gradient(170deg, #f5e9cb, #e8d4a4);
+      radial-gradient(120% 120% at 0% 0%, rgb(124 108 255 / 0.28), transparent 55%),
+      radial-gradient(100% 100% at 100% 100%, rgb(56 189 248 / 0.14), transparent 55%),
+      linear-gradient(180deg, rgb(255 255 255 / 0.06), rgb(255 255 255 / 0.02));
+    border: 1px solid rgb(196 186 255 / 0.18);
     box-shadow:
-      inset 0 0 50px rgb(122 82 30 / 0.35),
-      0 14px 40px -12px rgb(0 0 0 / 0.7);
+      inset 0 1px 0 rgb(255 255 255 / 0.08),
+      0 24px 60px -28px rgb(124 108 255 / 0.55);
   }
 
-  /* 황금 장식 글씨 */
+  /* 유리 막대 (헤더·하단 내비) */
+  .glass {
+    background: rgb(10 11 26 / 0.72);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+  }
+
+  /* 갈레온 금색 글씨 */
   .gilded {
-    background: linear-gradient(180deg, var(--color-gold-bright), var(--color-gold) 55%, #b88a35);
+    background: linear-gradient(180deg, var(--color-gold-bright), var(--color-gold));
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
   }
 
-  .parchment .gilded {
-    background: none;
-    color: var(--color-burgundy);
+  /* 오로라 그라데이션 글씨 (제목 강조) */
+  .text-aurora {
+    background: linear-gradient(100deg, #e9e5ff 0%, var(--color-magic-bright) 35%, var(--color-sky) 70%, #f0abfc 100%);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: aurora-text 8s ease-in-out infinite alternate;
+  }
+
+  /* 눌리는 느낌 */
+  .pressable {
+    transition:
+      transform 0.18s var(--ease-spring),
+      background-color 0.18s ease,
+      color 0.18s ease,
+      box-shadow 0.18s ease,
+      filter 0.18s ease;
+  }
+  .pressable:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+
+  /* 입력창 */
+  .field {
+    border-radius: 0.875rem;
+    border: 1px solid rgb(255 255 255 / 0.08);
+    background: rgb(255 255 255 / 0.04);
+    transition:
+      border-color 0.15s ease,
+      box-shadow 0.15s ease,
+      background-color 0.15s ease;
+  }
+  .field:hover {
+    border-color: rgb(255 255 255 / 0.14);
+  }
+  .field:focus {
+    outline: none;
+    border-color: rgb(155 140 255 / 0.7);
+    background: rgb(255 255 255 / 0.06);
+    box-shadow: 0 0 0 4px rgb(155 140 255 / 0.15);
+  }
+
+  /* 로딩 스켈레톤 */
+  .skeleton {
+    border-radius: 0.5rem;
+    background: linear-gradient(90deg, rgb(255 255 255 / 0.04) 0%, rgb(255 255 255 / 0.1) 50%, rgb(255 255 255 / 0.04) 100%);
+    background-size: 200% 100%;
+    animation: var(--animate-shimmer);
   }
 }
 
-/* 촛불 일렁임 */
-@keyframes candle-flicker {
+@keyframes twinkle {
+  from {
+    opacity: 0.35;
+  }
+  to {
+    opacity: 0.75;
+  }
+}
+
+@keyframes aurora {
+  from {
+    transform: translate3d(-4%, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(4%, 3%, 0) scale(1.08);
+  }
+}
+
+@keyframes aurora-text {
+  from {
+    background-position: 0% 50%;
+  }
+  to {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 150% 0;
+  }
+  to {
+    background-position: -50% 0;
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes pulse-dot {
   0%,
   100% {
-    opacity: 1;
-    transform: scaleY(1);
+    box-shadow: 0 0 0 0 rgb(255 107 107 / 0.55);
   }
-  40% {
-    opacity: 0.85;
-    transform: scaleY(0.94) skewX(-2deg);
-  }
-  70% {
-    opacity: 0.95;
-    transform: scaleY(1.04) skewX(1.5deg);
+  50% {
+    box-shadow: 0 0 0 5px rgb(255 107 107 / 0);
   }
 }
 
-.candle-flame {
-  transform-origin: 50% 100%;
-  animation: candle-flicker 2.4s ease-in-out infinite;
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.float {
+  animation: float 6s ease-in-out infinite;
 }
 
 @keyframes flash-up {
   from {
-    background-color: rgb(244 122 110 / 0.35);
+    background-color: rgb(255 107 107 / 0.28);
   }
   to {
     background-color: transparent;
@@ -174,7 +308,7 @@ h3 {
 
 @keyframes flash-down {
   from {
-    background-color: rgb(114 170 242 / 0.35);
+    background-color: rgb(91 155 255 / 0.28);
   }
   to {
     background-color: transparent;
@@ -190,9 +324,13 @@ h3 {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  body::before,
+  body::after,
+  .text-aurora,
+  .float,
+  .skeleton,
   .flash-up,
-  .flash-down,
-  .candle-flame {
+  .flash-down {
     animation: none;
   }
 }
