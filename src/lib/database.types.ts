@@ -200,18 +200,21 @@ export type Database = {
           discord_id: string;
           cash: number;
           updated_at: string;
+          display_name: string | null;
         };
         Insert: {
           guild_id: string;
           discord_id: string;
           cash?: number;
           updated_at?: string;
+          display_name?: string | null;
         };
         Update: {
           guild_id?: string;
           discord_id?: string;
           cash?: number;
           updated_at?: string;
+          display_name?: string | null;
         };
         Relationships: [];
       };
@@ -347,6 +350,10 @@ export type Database = {
           net_worth: number;
         }[];
       };
+      account_names: {
+        Args: { p_guild: string };
+        Returns: { discord_id: string; display_name: string }[];
+      };
       // 아래는 봇(service_role) 전용 — authenticated 에서는 실행 권한이 없다.
       bank_deposit_quota: {
         Args: { p_guild: string; p_discord: string };
@@ -358,6 +365,7 @@ export type Database = {
           p_guild: string;
           p_discord: string;
           p_amount: number;
+          p_display_name?: string | null;
         };
         Returns: Json;
       };
