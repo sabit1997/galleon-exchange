@@ -6,12 +6,11 @@ import type { MarketEvent } from "@/lib/database.types";
 import { eventImpact } from "@/lib/market";
 
 const EVENT_ICONS: Record<string, string> = {
+  listing: "🎓",
   period_complete: "📚",
-  attendance: "🙋",
   golden_snitch: "✨",
   golden_egg: "🥚",
   comeback: "🔁",
-  warning: "⚠️",
   penalty: "🚫",
 };
 
