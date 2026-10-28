@@ -18,13 +18,13 @@ export function PriceChart({ points, up }: { points: ChartPoint[]; up: boolean }
       autoSize: true,
       layout: {
         background: { type: ColorType.Solid, color: "transparent" },
-        textColor: "#94a3b8",
+        textColor: "#b8a581",
         attributionLogo: false,
       },
-      grid: { vertLines: { visible: false }, horzLines: { color: "rgba(255,255,255,0.05)" } },
+      grid: { vertLines: { visible: false }, horzLines: { color: "rgba(226,189,104,0.08)" } },
       rightPriceScale: { borderVisible: false },
       timeScale: { borderVisible: false, timeVisible: true, secondsVisible: false },
-      crosshair: { horzLine: { labelBackgroundColor: "#1e1b4b" }, vertLine: { labelBackgroundColor: "#1e1b4b" } },
+      crosshair: { horzLine: { labelBackgroundColor: "#43382a" }, vertLine: { labelBackgroundColor: "#43382a" } },
       handleScroll: false,
       handleScale: false,
     });
@@ -43,10 +43,10 @@ export function PriceChart({ points, up }: { points: ChartPoint[]; up: boolean }
   useEffect(() => {
     const series = seriesRef.current;
     if (!series) return;
-    const line = up ? "#f87171" : "#60a5fa";
+    const line = up ? "#f47a6e" : "#72aaf2";
     series.applyOptions({
       lineColor: line,
-      topColor: up ? "rgba(248,113,113,0.35)" : "rgba(96,165,250,0.35)",
+      topColor: up ? "rgba(244,122,110,0.35)" : "rgba(114,170,242,0.35)",
       bottomColor: "rgba(0,0,0,0)",
     });
     series.setData(points.map((p) => ({ time: p.time as UTCTimestamp, value: p.value })));

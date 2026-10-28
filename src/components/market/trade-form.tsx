@@ -59,12 +59,12 @@ export function TradeForm({ stock, config }: { stock: Stock; config: MarketConfi
 
   const tabClass = (s: TradeSide) =>
     `flex-1 rounded-lg py-2 text-sm font-semibold transition ${
-      side === s ? (s === "buy" ? "bg-rise/90 text-white" : "bg-fall/90 text-white") : "text-slate-400 hover:bg-white/5"
+      side === s ? (s === "buy" ? "bg-rise-deep text-white" : "bg-fall-deep text-white") : "text-slate-400 hover:bg-white/5"
     }`;
 
   return (
     <form onSubmit={submit} className="space-y-4">
-      <div className="flex gap-1 rounded-xl border border-white/10 p-1" role="tablist" aria-label="주문 종류">
+      <div className="flex gap-1 rounded-xl border border-gold/20 bg-black/20 p-1" role="tablist" aria-label="주문 종류">
         <button type="button" role="tab" aria-selected={side === "buy"} className={tabClass("buy")} onClick={() => setSide("buy")}>
           매수
         </button>
@@ -91,14 +91,14 @@ export function TradeForm({ stock, config }: { stock: Stock; config: MarketConfi
             autoComplete="off"
             value={qtyText}
             onChange={(e) => setQtyText(e.target.value.replace(/[^0-9]/g, "").slice(0, 6))}
-            className="min-w-0 flex-1 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-right text-lg tabular-nums focus:border-gold/50 focus:outline-none"
+            className="min-w-0 flex-1 rounded-xl border border-gold/20 bg-black/25 px-3 py-2 text-right text-lg tabular-nums focus:border-gold/60 focus:outline-none focus:ring-2 focus:ring-gold/15"
           />
           {[1, 10].map((n) => (
             <button
               key={n}
               type="button"
               onClick={() => setQtyText(String(Math.min(config.max_trade_qty, qty + n)))}
-              className="rounded-xl border border-white/10 px-3 text-sm text-slate-300 hover:bg-white/5"
+              className="rounded-xl border border-gold/20 px-3 text-sm text-slate-300 hover:bg-gold/10"
             >
               +{n}
             </button>
@@ -107,14 +107,14 @@ export function TradeForm({ stock, config }: { stock: Stock; config: MarketConfi
             type="button"
             disabled={maxQty < 1}
             onClick={() => setQtyText(String(maxQty))}
-            className="rounded-xl border border-white/10 px-3 text-sm text-slate-300 hover:bg-white/5 disabled:opacity-40"
+            className="rounded-xl border border-gold/20 px-3 text-sm text-slate-300 hover:bg-gold/10 disabled:opacity-40"
           >
             최대
           </button>
         </div>
       </div>
 
-      <dl className="space-y-1.5 rounded-xl bg-black/20 p-3 text-sm">
+      <dl className="space-y-1.5 rounded-xl border border-gold/10 bg-black/25 p-3 text-sm">
         <Row label="예상 체결가">
           <Galleon value={preview.execPrice} price />
         </Row>
@@ -124,7 +124,7 @@ export function TradeForm({ stock, config }: { stock: Stock; config: MarketConfi
         <Row label={`수수료 (${formatPct(config.fee_rate, 0).replace("+", "")})`}>
           <Galleon value={preview.fee} />
         </Row>
-        <div className="my-1 border-t border-white/10" />
+        <div className="my-1 border-t border-dashed border-gold/20" />
         <Row label={side === "buy" ? "총 결제 금액" : "받을 금액"} strong>
           <Galleon value={preview.total} />
         </Row>
@@ -147,7 +147,7 @@ export function TradeForm({ stock, config }: { stock: Stock; config: MarketConfi
         type="submit"
         disabled={pending || preview.error !== null}
         className={`w-full rounded-xl py-3 font-semibold text-white transition disabled:opacity-40 ${
-          side === "buy" ? "bg-rise hover:brightness-110" : "bg-fall hover:brightness-110"
+          side === "buy" ? "bg-rise-deep hover:brightness-110" : "bg-fall-deep hover:brightness-110"
         }`}
       >
         {pending ? "체결 중…" : side === "buy" ? "매수하기" : "매도하기"}
