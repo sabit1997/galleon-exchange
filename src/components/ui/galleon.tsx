@@ -6,9 +6,20 @@ export function Galleon({ value, price = false, className = "" }: { value: numbe
   return (
     <span className={`tabular-nums ${className}`}>
       {price ? formatPrice(value) : formatGalleon(value)}
-      <span className="ml-0.5 text-[0.8em]" aria-label="갈레온">
-        🪙
-      </span>
+      <GalleonCoin />
+    </span>
+  );
+}
+
+/** 작은 금화 표시 (갈레온 단위) */
+export function GalleonCoin({ className = "" }: { className?: string }) {
+  return (
+    <span
+      role="img"
+      aria-label="갈레온"
+      className={`ml-[0.25em] inline-grid h-[0.9em] w-[0.9em] translate-y-[0.08em] place-items-center rounded-full bg-[radial-gradient(circle_at_35%_30%,#fff1c2,#f5c451_55%,#b9831c)] align-baseline text-[0.55em] font-black leading-none text-[#6b4a0c] shadow-[inset_0_-1px_0_rgb(0_0_0/0.2)] ${className}`}
+    >
+      G
     </span>
   );
 }
