@@ -109,14 +109,14 @@ export function StockDetail() {
 
   return (
     <div className="space-y-4">
-      <Link href="/" className="inline-block text-sm text-slate-400 hover:text-slate-200">
+      <Link href="/" className="inline-block text-sm text-slate-400 hover:text-gold">
         ← 시장
       </Link>
 
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="font-display text-2xl font-bold sm:text-3xl">{stock.display_name}</h1>
+            <h1 className="font-display gilded text-2xl font-bold sm:text-3xl">{stock.display_name}</h1>
             <HouseBadge house={stock.house} />
           </div>
           {stock.last_event_at && (
@@ -148,7 +148,7 @@ export function StockDetail() {
           </Card>
 
           <Card>
-            <h2 className="mb-3 font-semibold">최근 소식</h2>
+            <h2 className="font-display mb-3 font-semibold text-slate-100">📜 최근 소식</h2>
             {events === null ? (
               <Spinner />
             ) : events.length === 0 ? (
@@ -170,7 +170,7 @@ export function StockDetail() {
         <div className="space-y-4">
           {holding && valuation && (
             <Card>
-              <h2 className="mb-2 font-semibold">내 보유</h2>
+              <h2 className="font-display mb-2 font-semibold text-slate-100">내 보유</h2>
               <dl className="grid grid-cols-2 gap-y-1 text-sm">
                 <dt className="text-slate-400">수량</dt>
                 <dd className="text-right tabular-nums">{holding.qty.toLocaleString("ko-KR")}주</dd>
@@ -186,7 +186,7 @@ export function StockDetail() {
             </Card>
           )}
           <Card>
-            <h2 className="mb-3 font-semibold">주문</h2>
+            <h2 className="font-display mb-3 font-semibold text-slate-100">🪶 주문</h2>
             {config ? <TradeForm stock={stock} config={config} /> : <Empty>시장 설정을 불러오지 못했어요.</Empty>}
           </Card>
         </div>

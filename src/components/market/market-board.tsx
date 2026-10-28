@@ -47,15 +47,15 @@ export function MarketBoard() {
 
       <div className="mb-4 grid grid-cols-3 gap-2 text-center text-sm">
         <Card className="!p-3">
-          <p className="text-slate-400">상장 학생</p>
-          <p className="mt-1 text-lg font-semibold tabular-nums">{stocks.size}</p>
+          <p className="text-slate-400">🎓 상장 학생</p>
+          <p className="mt-1 text-lg font-semibold tabular-nums text-gold">{stocks.size}</p>
         </Card>
         <Card className="!p-3">
-          <p className="text-slate-400">상승</p>
+          <p className="text-slate-400">▲ 상승</p>
           <p className="mt-1 text-lg font-semibold tabular-nums text-rise">{ups}</p>
         </Card>
         <Card className="!p-3">
-          <p className="text-slate-400">하락</p>
+          <p className="text-slate-400">▼ 하락</p>
           <p className="mt-1 text-lg font-semibold tabular-nums text-fall">{downs}</p>
         </Card>
       </div>
@@ -66,16 +66,16 @@ export function MarketBoard() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="이름·기숙사 검색"
-          className="min-w-0 flex-1 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm placeholder:text-slate-500 focus:border-gold/50 focus:outline-none"
+          className="min-w-0 flex-1 rounded-xl border border-gold/20 bg-black/25 px-3 py-2 text-sm placeholder:text-slate-500 focus:border-gold/60 focus:outline-none focus:ring-2 focus:ring-gold/15"
         />
-        <div className="flex rounded-xl border border-white/10 p-0.5 text-sm" role="group" aria-label="정렬">
+        <div className="flex rounded-xl border border-gold/20 bg-black/20 p-0.5 text-sm" role="group" aria-label="정렬">
           {SORTS.map((s) => (
             <button
               key={s.key}
               type="button"
               onClick={() => setSort(s.key)}
               aria-pressed={sort === s.key}
-              className={`rounded-lg px-3 py-1.5 ${sort === s.key ? "bg-white/10 text-gold" : "text-slate-400"}`}
+              className={`rounded-lg px-3 py-1.5 ${sort === s.key ? "bg-gold/15 text-gold" : "text-slate-400 hover:text-slate-200"}`}
             >
               {s.label}
             </button>
@@ -91,7 +91,7 @@ export function MarketBoard() {
         ) : list.length === 0 ? (
           <Empty>{query ? "검색 결과가 없어요." : "아직 상장된 학생이 없어요. 첫 교시를 완주해 보세요!"}</Empty>
         ) : (
-          <ul className="divide-y divide-white/5">
+          <ul className="divide-y divide-gold/10">
             {list.map((s) => (
               <StockRow key={s.discord_id} stock={s} isMe={s.discord_id === me} heldQty={holdings.get(s.discord_id)?.qty ?? 0} />
             ))}
@@ -109,7 +109,7 @@ function StockRow({ stock, isMe, heldQty }: { stock: LiveStock; isMe: boolean; h
     <li>
       <Link
         href={`/stocks/${encodeURIComponent(stock.discord_id)}`}
-        className="flex items-center gap-3 px-4 py-3 transition hover:bg-white/[0.04]"
+        className="flex items-center gap-3 px-4 py-3 transition hover:bg-gold/[0.05]"
       >
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">

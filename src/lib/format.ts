@@ -63,10 +63,11 @@ export function houseKey(house: string | null | undefined): HouseKey {
   return "none";
 }
 
+/** 기숙사 색 — 빨강/금, 초록/은, 파랑/청동, 노랑/검정 */
 export const HOUSE_STYLES: Record<HouseKey, { badge: string; label: string }> = {
-  gryffindor: { badge: "bg-red-900/60 text-red-200 ring-red-500/40", label: "그리핀도르" },
-  slytherin: { badge: "bg-emerald-900/60 text-emerald-200 ring-emerald-500/40", label: "슬리데린" },
-  ravenclaw: { badge: "bg-blue-900/60 text-blue-200 ring-blue-500/40", label: "래번클로" },
-  hufflepuff: { badge: "bg-yellow-900/60 text-yellow-200 ring-yellow-500/40", label: "후플푸프" },
-  none: { badge: "bg-slate-800 text-slate-300 ring-slate-600/40", label: "무소속" },
+  gryffindor: { badge: "bg-[#7a1620] text-[#f3cf6b] ring-[#d4a537]/70", label: "그리핀도르" },
+  slytherin: { badge: "bg-[#14482f] text-[#dfe4e8] ring-[#a9b4bd]/70", label: "슬리데린" },
+  ravenclaw: { badge: "bg-[#1b2f66] text-[#e2b07a] ring-[#b07a45]/70", label: "래번클로" },
+  hufflepuff: { badge: "bg-[#e9b923] text-[#1a1408] ring-[#1a1408]/60", label: "후플푸프" },
+  none: { badge: "bg-[#3a3128] text-[#e9dcc0] ring-[#9a876a]/50", label: "무소속" },
 };
