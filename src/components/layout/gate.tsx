@@ -87,7 +87,7 @@ function NotMember() {
       </p>
       <h1 className="font-display gilded mt-4 text-2xl font-bold">아직 입학 기록이 없어요</h1>
       <p className="mt-3 max-w-sm text-balance text-slate-300">
-        서버에서 한 교시 이상 공부하거나 <code className="text-gold">/증권 입금</code>을 하면 입장할 수 있어요.
+        기숙사에 배정된 학생은 자동으로 상장돼요. 막 입학했다면 한 교시 완주하거나 <code className="text-gold">/증권 입금</code>을 하면 입장할 수 있어요.
       </p>
       {profile?.display_name && (
         <p className="mt-2 text-sm text-slate-500">{profile.display_name} 님으로 로그인되어 있어요.</p>
