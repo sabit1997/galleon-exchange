@@ -1,38 +1,61 @@
 // 매매 미리보기·에러 매핑 등 순수 로직.
-// previewTrade 는 SQL public.trade() 와 같은 결과를 내야 한다. 부동소수점 오차로 반올림이
-// 어긋나지 않도록 가격은 센트(1/100), 비율은 백만분율 정수(BigInt)로 계산한다.
+// previewTrade 는 SQL public._quote / public._execute 와 같은 결과를 내야 한다. 부동소수점
+// 오차로 반올림이 어긋나지 않도록 비율은 백만분율 정수(BigInt), 가격은 유리수(분자/분모)로 계산한다.
 
 import type { Json, MarketConfig } from "@/lib/database.types";
 
 export type TradeSide = "buy" | "sell";
+/** cash: 현금 · credit: 신용 · short: 공매도 */
+export type Position = "cash" | "credit" | "short";
 
 export type TradeConfig = Pick<
   MarketConfig,
-  "fee_rate" | "min_price" | "trade_impact" | "max_trade_impact" | "max_trade_qty"
+  | "fee_rate"
+  | "sell_tax_rate"
+  | "min_price"
+  | "trade_impact"
+  | "max_trade_impact"
+  | "max_trade_qty"
+  | "price_limit_rate"
+  | "credit_margin_rate"
+  | "short_margin_rate"
 >;
 
 export type TradeErrorCode =
   | "insufficient_cash"
   | "insufficient_shares"
+  | "insufficient_short"
   | "self_trade"
   | "bad_qty"
+  | "bad_price"
   | "no_stock"
+  | "no_order"
   | "not_logged_in"
   | "bad_side"
-  | "not_member";
+  | "bad_position"
+  | "not_member"
+  | "vi_halt"
+  | "credit_limit"
+  | "limit_cash_only";
 
 export type TradePreview = {
   /** 가격 충격 비율 (예: 0.004) */
   impact: number;
-  /** 체결가 (충격 전후 가격의 중간) */
+  /** 체결가 (충격 전후 가격의 중간 · 호가 단위) */
   execPrice: number;
   /** 체결 후 새 주가 */
   newPrice: number;
-  /** 체결 금액 (매수: 올림, 매도: 내림) */
+  /** 체결 금액 = 체결가 × 수량 */
   gross: number;
   fee: number;
-  /** 매수: 계좌에서 빠질 총액, 매도: 계좌로 들어올 금액 */
-  total: number;
+  /** 증권거래세 (매도만) */
+  tax: number;
+  /** 신용매수 대출금 */
+  loan: number;
+  /** 공매도 보증금 */
+  margin: number;
+  /** 계좌 현금 변화 (음수면 빠져나감) */
+  cashDelta: number;
   /** 서버에서 거절될 것이 확실한 경우의 코드 */
   error: TradeErrorCode | null;
 };
@@ -41,14 +64,10 @@ const MICRO = BigInt(1_000_000);
 const ZERO = BigInt(0);
 const ONE = BigInt(1);
 const TWO = BigInt(2);
-const HUNDRED = BigInt(100);
 
-const toCents = (n: number) => BigInt(Math.round(n * 100));
 const toMicro = (n: number) => BigInt(Math.round(n * 1_000_000));
-const fromCents = (c: bigint) => Number(c) / 100;
 
 const absBig = (n: bigint) => (n < ZERO ? -n : n);
-const maxBig = (a: bigint, b: bigint) => (a > b ? a : b);
 const minBig = (a: bigint, b: bigint) => (a < b ? a : b);
 
 /** Postgres round(): 0.5 는 0에서 먼 쪽으로. den > 0 */
@@ -69,81 +88,185 @@ export function floorDiv(num: bigint, den: bigint): bigint {
   return num % den !== ZERO && num < ZERO ? q - ONE : q;
 }
 
+// ───────────────────────────── 호가 단위 · 가격 제한 ─────────────────────────────
+
+const TICK_TABLE: [number, number][] = [
+  [2000, 1],
+  [5000, 5],
+  [20000, 10],
+  [50000, 50],
+  [200000, 100],
+  [500000, 500],
+];
+
+/** 한국거래소 호가 단위 (SQL tick_size) */
+export function tickSize(price: number): number {
+  for (const [below, tick] of TICK_TABLE) if (price < below) return tick;
+  return 1000;
+}
+
+/** 유리수 num/den 의 호가 단위 */
+function tickOf(num: bigint, den: bigint): bigint {
+  for (const [below, tick] of TICK_TABLE) if (num < BigInt(below) * den) return BigInt(tick);
+  return BigInt(1000);
+}
+
+type Rounding = "round" | "floor" | "ceil";
+
+/** 유리수 num/den 을 호가 단위로 맞춘다. den > 0, 결과는 정수 갈레온 */
+function tickRational(num: bigint, den: bigint, mode: Rounding): bigint {
+  const t = tickOf(num, den);
+  const d = den * t;
+  const q = mode === "round" ? roundDiv(num, d) : mode === "floor" ? floorDiv(num, d) : ceilDiv(num, d);
+  return q * t;
+}
+
+export function roundTick(price: number): number {
+  return Number(tickRational(toMicro(price), MICRO, "round"));
+}
+
+/** 기준가에서 하한가 · 상한가 (SQL price_bounds) */
+export function priceBounds(
+  cfg: Pick<TradeConfig, "min_price" | "price_limit_rate">,
+  dayOpen: number,
+): { lo: number; hi: number } {
+  const open = toMicro(dayOpen);
+  const rate = toMicro(cfg.price_limit_rate);
+  const den = MICRO * MICRO;
+  const lo = tickRational(open * (MICRO - rate), den, "ceil");
+  const hi = tickRational(open * (MICRO + rate), den, "floor");
+  return { lo: Math.max(cfg.min_price, Number(lo)), hi: Number(hi) };
+}
+
 export function isValidQty(qty: number, cfg: Pick<TradeConfig, "max_trade_qty">): boolean {
   return Number.isInteger(qty) && qty >= 1 && qty <= cfg.max_trade_qty;
 }
 
+/** SQL _quote 미러: 시장가 체결 견적 */
+export function quote(
+  cfg: TradeConfig,
+  price: number,
+  dayOpen: number,
+  side: TradeSide,
+  qty: number,
+): { impact: number; execPrice: number; newPrice: number; gross: number } {
+  const impact = minBig(toMicro(cfg.max_trade_impact), toMicro(cfg.trade_impact) * BigInt(qty));
+  const p = toMicro(price);
+  const target = tickRational(p * (side === "buy" ? MICRO + impact : MICRO - impact), MICRO * MICRO, "round");
+  const { lo, hi } = priceBounds(cfg, dayOpen);
+  const newPrice = Math.min(hi, Math.max(lo, Number(target)));
+  const exec = tickRational(p + toMicro(newPrice), TWO * MICRO, "round");
+  return {
+    impact: Number(impact) / 1_000_000,
+    execPrice: Number(exec),
+    newPrice,
+    gross: Number(exec) * qty,
+  };
+}
+
+const ceilRate = (amount: number, rate: number) =>
+  Number(ceilDiv(BigInt(amount) * toMicro(rate), MICRO));
+
 /**
- * SQL trade() 미러.
- *   impact = min(max_trade_impact, trade_impact * qty)
- *   매수: exec = round(price*(1+impact/2), 2), new = round(price*(1+impact), 2)
- *         gross = ceil(exec*qty), fee = max(1, ceil(gross*fee_rate))
- *   매도: exec = round(price*(1-impact/2), 2), new = max(min_price, round(price*(1-impact), 2))
- *         gross = floor(exec*qty), fee = min(gross, max(1, ceil(gross*fee_rate)))
- * cash / heldQty 를 주면 잔고 부족도 미리 판정한다.
+ * SQL _execute 미러. 계좌 현금이 얼마나 바뀌는지까지 계산한다.
+ *   매수 수수료 max(1, ceil(gross*fee_rate)) · 매도는 수수료 + 거래세 ceil(gross*sell_tax_rate)
+ *   신용매수: 보증금 ceil(gross*credit_margin_rate) + 수수료 만 현금에서, 나머지는 대출
+ *   신용상환(매도): 매도대금 − 수수료 − 세금 − 대출 상환분
+ *   공매도: 보증금 ceil(gross*short_margin_rate) 를 현금에서 담보로
+ *   공매도 상환(매수): 담보 해제분 − 매수대금 − 수수료
+ * position 이 credit/short 이고 청산 쪽이면 opts.position* 로 그 포지션을 넘긴다.
  */
 export function previewTrade(
   cfg: TradeConfig,
   price: number,
+  dayOpen: number,
   side: TradeSide,
   qty: number,
-  opts: { cash?: number; heldQty?: number } = {},
+  opts: {
+    position?: Position;
+    cash?: number;
+    /** 매도 가능한 현금 보유 수량 (예약 수량 제외) */
+    heldQty?: number;
+    /** 신용 · 공매도 포지션 (청산할 때) */
+    positionQty?: number;
+    positionLoan?: number;
+    positionCollateral?: number;
+  } = {},
 ): TradePreview {
-  if (!isValidQty(qty, cfg)) {
-    return { impact: 0, execPrice: price, newPrice: price, gross: 0, fee: 0, total: 0, error: "bad_qty" };
+  const position = opts.position ?? "cash";
+  const empty: TradePreview = {
+    impact: 0, execPrice: price, newPrice: price, gross: 0, fee: 0, tax: 0, loan: 0, margin: 0, cashDelta: 0,
+    error: "bad_qty",
+  };
+  if (!isValidQty(qty, cfg)) return empty;
+
+  const q = quote(cfg, price, dayOpen, side, qty);
+  let fee = Math.max(1, ceilRate(q.gross, cfg.fee_rate));
+  let tax = 0;
+  if (side === "sell") {
+    fee = Math.min(q.gross, fee);
+    tax = Math.min(q.gross - fee, ceilRate(q.gross, cfg.sell_tax_rate));
   }
 
-  const q = BigInt(qty);
-  const cents = toCents(price);
-  const impactMicro = minBig(toMicro(cfg.max_trade_impact), toMicro(cfg.trade_impact) * q);
-  const feeMicro = toMicro(cfg.fee_rate);
-  const one = MICRO;
-
-  let execCents: bigint;
-  let newCents: bigint;
-  let gross: bigint;
-  let fee: bigint;
-
-  if (side === "buy") {
-    execCents = roundDiv(cents * (TWO * one + impactMicro), TWO * one);
-    newCents = roundDiv(cents * (one + impactMicro), one);
-    gross = ceilDiv(execCents * q, HUNDRED);
-    fee = maxBig(ONE, ceilDiv(gross * feeMicro, one));
-  } else {
-    execCents = roundDiv(cents * (TWO * one - impactMicro), TWO * one);
-    newCents = maxBig(toCents(cfg.min_price), roundDiv(cents * (one - impactMicro), one));
-    gross = floorDiv(execCents * q, HUNDRED);
-    fee = minBig(gross, maxBig(ONE, ceilDiv(gross * feeMicro, one)));
-  }
-
-  const total = side === "buy" ? gross + fee : gross - fee;
-
+  let cashDelta = 0;
+  let loan = 0;
+  let margin = 0;
   let error: TradeErrorCode | null = null;
-  if (side === "buy" && opts.cash !== undefined && BigInt(Math.floor(opts.cash)) < total) {
+  const posQty = opts.positionQty ?? 0;
+
+  if (position === "cash") {
+    cashDelta = side === "buy" ? -(q.gross + fee) : q.gross - fee - tax;
+    if (side === "sell" && opts.heldQty !== undefined && opts.heldQty < qty) error = "insufficient_shares";
+  } else if (position === "credit" && side === "buy") {
+    const own = ceilRate(q.gross, cfg.credit_margin_rate) + fee;
+    loan = q.gross + fee - own;
+    cashDelta = -own;
+  } else if (position === "credit") {
+    if (posQty < qty) error = "insufficient_shares";
+    const posLoan = opts.positionLoan ?? 0;
+    const repay = posQty === qty ? posLoan : posQty > 0 ? Number(roundDiv(BigInt(posLoan) * BigInt(qty), BigInt(posQty))) : 0;
+    cashDelta = q.gross - fee - tax - repay;
+  } else if (side === "sell") {
+    margin = ceilRate(q.gross, cfg.short_margin_rate);
+    cashDelta = -margin;
+  } else {
+    if (posQty < qty) error = "insufficient_short";
+    const col = opts.positionCollateral ?? 0;
+    const release = posQty === qty ? col : posQty > 0 ? Number(roundDiv(BigInt(col) * BigInt(qty), BigInt(posQty))) : 0;
+    cashDelta = release - q.gross - fee;
+  }
+
+  if (!error && cashDelta < 0 && opts.cash !== undefined && Math.floor(opts.cash) < -cashDelta) {
     error = "insufficient_cash";
   }
-  if (side === "sell" && opts.heldQty !== undefined && opts.heldQty < qty) {
-    error = "insufficient_shares";
-  }
 
-  return {
-    impact: Number(impactMicro) / 1_000_000,
-    execPrice: fromCents(execCents),
-    newPrice: fromCents(newCents),
-    gross: Number(gross),
-    fee: Number(fee),
-    total: Number(total),
-    error,
-  };
+  return { ...q, fee, tax, loan, margin, cashDelta, error };
+}
+
+/** 담보비율 경고 단계: 유지 기준 × 이 값 미만이면 위험 · 주의 */
+export const MARGIN_DANGER = 1.1;
+export const MARGIN_WARN = 1.3;
+
+/** 지정가 매수 주문에 묶이는 갈레온 (SQL place_order) */
+export function limitBuyReserve(cfg: Pick<TradeConfig, "fee_rate">, limit: number, qty: number): number {
+  const amount = limit * qty;
+  return amount + Math.max(1, ceilRate(amount, cfg.fee_rate));
 }
 
 /** 현재 잔고로 살 수 있는 최대 수량 (max_trade_qty 이내). */
-export function maxAffordableQty(cfg: TradeConfig, price: number, cash: number): number {
+export function maxAffordableQty(
+  cfg: TradeConfig,
+  price: number,
+  dayOpen: number,
+  cash: number,
+  position: Position = "cash",
+): number {
+  const side: TradeSide = position === "short" ? "sell" : "buy";
   let lo = 0;
   let hi = cfg.max_trade_qty;
   while (lo < hi) {
     const mid = Math.ceil((lo + hi) / 2);
-    if (previewTrade(cfg, price, "buy", mid).total <= cash) lo = mid;
+    if (-previewTrade(cfg, price, dayOpen, side, mid, { position }).cashDelta <= cash) lo = mid;
     else hi = mid - 1;
   }
   return lo;
@@ -152,14 +275,21 @@ export function maxAffordableQty(cfg: TradeConfig, price: number, cash: number):
 // ───────────────────────────── 에러 메시지 ─────────────────────────────
 
 const ERROR_MESSAGES: Record<TradeErrorCode, string> = {
-  insufficient_cash: "갈레온이 부족해요. 디스코드에서 /증권 입금 으로 계좌를 채워 주세요.",
-  insufficient_shares: "보유한 주식보다 많이 팔 수는 없어요.",
+  insufficient_cash: "주문가능금액이 부족해요. 디스코드에서 /증권 입금 으로 계좌를 채워 주세요.",
+  insufficient_shares: "매도 가능 수량보다 많이 팔 수는 없어요. 지정가 매도에 묶인 수량은 빠져요.",
+  insufficient_short: "공매도한 수량보다 많이 갚을 수는 없어요.",
   self_trade: "자기 자신의 주식은 사고팔 수 없어요.",
   bad_qty: "수량이 올바르지 않아요.",
+  bad_price: "지정가는 호가 단위에 맞고 상한가·하한가 안이어야 해요.",
   no_stock: "상장되지 않은 학생이에요.",
+  no_order: "이미 체결됐거나 취소된 주문이에요.",
   not_logged_in: "로그인이 필요해요. 다시 로그인해 주세요.",
   bad_side: "매수/매도 구분이 올바르지 않아요.",
+  bad_position: "주문 종류가 올바르지 않아요.",
   not_member: "기숙사에 배정된 학생이거나 /증권 입금 을 해야 거래할 수 있어요.",
+  vi_halt: "변동성 완화장치(VI)가 발동돼 잠시 거래가 멈췄어요. 2분 뒤 다시 시도하거나 지정가로 주문해 주세요.",
+  credit_limit: "신용 대출 한도를 넘었어요. 신용 잔고를 일부 갚은 뒤 다시 시도해 주세요.",
+  limit_cash_only: "지정가 주문은 현금 매매만 가능해요. 신용·공매도는 시장가로 주문해 주세요.",
 };
 
 const ERROR_CODES = Object.keys(ERROR_MESSAGES) as TradeErrorCode[];
@@ -222,7 +352,7 @@ export function direction(delta: number): Direction {
 
 /** 평가금액은 리더보드와 같이 floor(qty * price). */
 export function holdingValuation(qty: number, costBasis: number, price: number) {
-  const value = Number(floorDiv(toCents(price) * BigInt(qty), HUNDRED));
+  const value = Math.floor(qty * price);
   const pnl = value - costBasis;
   return { value, pnl, pnlRatio: costBasis > 0 ? pnl / costBasis : 0 };
 }
