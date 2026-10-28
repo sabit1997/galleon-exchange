@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { EventEffect, MarketConfig, Stock } from "@/lib/database.types";
-import { direction, type Direction } from "@/lib/market";
+import { appendSpark, direction, SPARK_POINTS, type Direction } from "@/lib/market";
 import { useMemberSession } from "./session-provider";
 
 export type LiveStock = Stock & {
@@ -18,6 +18,8 @@ type MarketContextValue = {
   config: MarketConfig | null;
   effects: Map<string, EventEffect>;
   stocks: Map<string, LiveStock>;
+  /** discord_id → 최근 주가 (오래된 것부터 · 목록 스파크라인용) */
+  sparks: Map<string, number[]>;
   /** discord_id → 표시 이름 (종목 이름 → 계좌 이름(서버 닉네임) → 익명) */
   nameOf: (discordId: string) => string;
   reload: () => void;
@@ -41,6 +43,25 @@ export function MarketProvider({ children }: { children: React.ReactNode }) {
   const [version, setVersion] = useState(0);
   // 종목이 없는 계좌 주인(기숙사 미배정 · 사감)의 서버 닉네임. 매매 소식 이름표용.
   const [accountNames, setAccountNames] = useState<Map<string, string>>(new Map());
+  const [sparks, setSparks] = useState<Map<string, number[]>>(new Map());
+
+  // 최근 7일 틱으로 종목별 최근 주가를 채운다. 이후엔 stocks 실시간 변경으로 이어 붙인다.
+  const loadSparks = useCallback(async () => {
+    const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const { data, error: err } = await supabase
+      .from("price_ticks")
+      .select("discord_id, price, id")
+      .eq("guild_id", guildId)
+      .gte("created_at", since)
+      .order("id", { ascending: false })
+      .limit(5000);
+    if (err) return;
+    const next = new Map<string, number[]>();
+    for (const t of [...data].reverse()) {
+      next.set(t.discord_id, appendSpark(next.get(t.discord_id) ?? [], t.price, SPARK_POINTS));
+    }
+    setSparks(next);
+  }, [supabase, guildId]);
 
   const loadStocks = useCallback(async () => {
     const { data, error: err } = await supabase.from("stocks").select("*").eq("guild_id", guildId);
@@ -62,7 +83,7 @@ export function MarketProvider({ children }: { children: React.ReactNode }) {
       if (cfgRes.error || effRes.error) setError((cfgRes.error ?? effRes.error)?.message ?? null);
       setConfig(cfgRes.data ?? null);
       setEffects(new Map((effRes.data ?? []).map((e) => [e.type, e])));
-      await loadStocks();
+      await Promise.all([loadStocks(), loadSparks()]);
       const namesRes = await supabase.rpc("account_names", { p_guild: guildId });
       if (cancelled) return;
       if (!namesRes.error) setAccountNames(new Map(namesRes.data.map((r) => [r.discord_id, r.display_name])));
@@ -71,7 +92,7 @@ export function MarketProvider({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [supabase, guildId, loadStocks, version]);
+  }, [supabase, guildId, loadStocks, loadSparks, version]);
 
   // 주가 실시간 반영. (재)연결될 때마다 전체를 다시 읽어 놓친 변경을 메운다.
   useEffect(() => {
@@ -93,6 +114,10 @@ export function MarketProvider({ children }: { children: React.ReactNode }) {
             }
             return next;
           });
+          if (payload.eventType !== "DELETE") {
+            const row = payload.new as Stock;
+            setSparks((prev) => new Map(prev).set(row.discord_id, appendSpark(prev.get(row.discord_id) ?? [], row.price)));
+          }
         },
       )
       .subscribe((status) => {
@@ -113,8 +138,8 @@ export function MarketProvider({ children }: { children: React.ReactNode }) {
   const reload = useCallback(() => setVersion((v) => v + 1), []);
 
   const value = useMemo(
-    () => ({ loading, error, config, effects, stocks, nameOf, reload }),
-    [loading, error, config, effects, stocks, nameOf, reload],
+    () => ({ loading, error, config, effects, stocks, sparks, nameOf, reload }),
+    [loading, error, config, effects, stocks, sparks, nameOf, reload],
   );
   return <MarketContext.Provider value={value}>{children}</MarketContext.Provider>;
 }

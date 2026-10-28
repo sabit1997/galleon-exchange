@@ -9,6 +9,7 @@ import { Card, Empty, MeChip, PageTitle, SkeletonRows } from "@/components/ui/ca
 import { ChangePct, Galleon } from "@/components/ui/galleon";
 import { HouseBadge, StockAvatar } from "@/components/ui/house-badge";
 import { SearchIcon } from "@/components/ui/icons";
+import { Sparkline } from "@/components/ui/sparkline";
 import { changeRatio } from "@/lib/market";
 
 type SortKey = "change" | "price" | "name";
@@ -20,7 +21,7 @@ const SORTS: { key: SortKey; label: string }[] = [
 ];
 
 export function MarketBoard() {
-  const { stocks, loading, error } = useMarket();
+  const { stocks, sparks, loading, error } = useMarket();
   const { holdings } = useAccount();
   const { me } = useMemberSession();
   const [sort, setSort] = useState<SortKey>("change");
@@ -91,7 +92,13 @@ export function MarketBoard() {
         ) : (
           <ul className="divide-y divide-white/5">
             {list.map((s) => (
-              <StockRow key={s.discord_id} stock={s} isMe={s.discord_id === me} heldQty={holdings.get(s.discord_id)?.qty ?? 0} />
+              <StockRow
+                key={s.discord_id}
+                stock={s}
+                spark={sparks.get(s.discord_id) ?? []}
+                isMe={s.discord_id === me}
+                heldQty={holdings.get(s.discord_id)?.qty ?? 0}
+              />
             ))}
           </ul>
         )}
@@ -109,7 +116,17 @@ function Stat({ label, value, tone }: { label: string; value: number; tone: stri
   );
 }
 
-function StockRow({ stock, isMe, heldQty }: { stock: LiveStock; isMe: boolean; heldQty: number }) {
+function StockRow({
+  stock,
+  spark,
+  isMe,
+  heldQty,
+}: {
+  stock: LiveStock;
+  spark: number[];
+  isMe: boolean;
+  heldQty: number;
+}) {
   const ratio = changeRatio(stock.price, stock.day_open);
   const flashClass = stock.flash === "up" ? "flash-up" : stock.flash === "down" ? "flash-down" : "";
   return (
@@ -129,6 +146,7 @@ function StockRow({ stock, isMe, heldQty }: { stock: LiveStock; isMe: boolean; h
             {heldQty > 0 && <span className="truncate">보유 {heldQty.toLocaleString("ko-KR")}주</span>}
           </div>
         </div>
+        <Sparkline prices={spark} width={48} height={22} className="shrink-0" />
         {/* flashKey 가 바뀌면 다시 마운트되어 애니메이션이 재생된다 */}
         <div key={stock.flashKey} className={`shrink-0 rounded-xl px-2 py-1 text-right ${stock.flashKey > 0 ? flashClass : ""}`}>
           <Galleon value={stock.price} price className="text-[15px] font-semibold text-slate-50" />

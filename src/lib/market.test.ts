@@ -14,6 +14,8 @@ import {
   tradeErrorCode,
   tradeErrorMessage,
   type TradeConfig,
+  appendSpark,
+  sparklinePath,
 } from "./market";
 
 // market_config 기본값
@@ -200,5 +202,25 @@ describe("toChartPoints", () => {
     expect(toChartPoints([{ id: 1, price: 1, created_at: "1970-01-01T00:00:05Z" }], 0)).toEqual([
       { time: 5, value: 1 },
     ]);
+  });
+});
+
+describe("스파크라인", () => {
+  it("점이 2개 미만이면 그리지 않는다", () => {
+    expect(sparklinePath([], 56, 24)).toBeNull();
+    expect(sparklinePath([10], 56, 24)).toBeNull();
+  });
+
+  it("최저가는 아래, 최고가는 위에 놓인다", () => {
+    expect(sparklinePath([10, 12], 50, 20, 2)).toBe("M0.0 18.0 L50.0 2.0");
+  });
+
+  it("값이 모두 같으면 가운데 수평선", () => {
+    expect(sparklinePath([10, 10, 10], 40, 20)).toBe("M0.0 10.0 L20.0 10.0 L40.0 10.0");
+  });
+
+  it("직전 값과 같으면 붙이지 않고, 최대 길이를 넘으면 앞을 버린다", () => {
+    expect(appendSpark([10, 11], 11)).toEqual([10, 11]);
+    expect(appendSpark([10, 11], 12, 2)).toEqual([11, 12]);
   });
 });

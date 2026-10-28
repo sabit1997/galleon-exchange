@@ -253,3 +253,35 @@ export function toChartPoints(
   }
   return out;
 }
+
+// ───────────────────────────── 스파크라인 ─────────────────────────────
+
+/** 목록에 그리는 최근 주가 점 개수. */
+export const SPARK_POINTS = 30;
+
+/** 최근 주가에 새 값을 붙인다. 직전 값과 같으면 그대로, 길이는 max 로 자른다. */
+export function appendSpark(series: readonly number[], price: number, max = SPARK_POINTS): number[] {
+  if (series.length > 0 && series[series.length - 1] === price) return [...series];
+  const next = [...series, price];
+  return next.length > max ? next.slice(next.length - max) : next;
+}
+
+/**
+ * 최근 주가 → SVG path (`M x y L x y …`). 점이 2개 미만이면 null.
+ * 값이 모두 같으면 가운데 수평선. pad 는 선이 잘리지 않게 위아래 여백.
+ */
+export function sparklinePath(prices: readonly number[], width: number, height: number, pad = 2): string | null {
+  if (prices.length < 2) return null;
+  const min = Math.min(...prices);
+  const max = Math.max(...prices);
+  const span = max - min;
+  const stepX = width / (prices.length - 1);
+  const usable = height - pad * 2;
+  return prices
+    .map((p, i) => {
+      const x = i * stepX;
+      const y = span === 0 ? height / 2 : pad + usable - ((p - min) / span) * usable;
+      return `${i === 0 ? "M" : "L"}${x.toFixed(1)} ${y.toFixed(1)}`;
+    })
+    .join(" ");
+}
