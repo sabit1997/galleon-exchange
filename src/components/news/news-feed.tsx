@@ -5,13 +5,21 @@ import { useEffect, useState } from "react";
 import { EventLabel, eventIcon } from "@/components/market/event-text";
 import { useMarket } from "@/components/providers/market-provider";
 import { useMemberSession } from "@/components/providers/session-provider";
-import { Card, Empty, PageTitle, Spinner } from "@/components/ui/card";
+import { Empty, Spinner } from "@/components/ui/card";
 import { HouseBadge } from "@/components/ui/house-badge";
 import { useNow } from "@/hooks/use-now";
 import type { MarketEvent, Trade } from "@/lib/database.types";
 import { formatPrice, formatRelativeTime } from "@/lib/format";
 
 const PAGE = 40;
+
+const mastheadDate = new Intl.DateTimeFormat("ko-KR", {
+  timeZone: "Asia/Seoul",
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+  weekday: "long",
+});
 const MAX_ITEMS = 150;
 
 type NewsItem = { kind: "event"; at: string; key: string; row: MarketEvent } | { kind: "trade"; at: string; key: string; row: Trade };
@@ -57,30 +65,41 @@ export function NewsFeed() {
 
   return (
     <div>
-      <PageTitle title="📰 예언자 일보" subtitle="호그와트 증권가의 소식이 실시간으로 도착해요." />
-      <Card className="!p-0 overflow-hidden">
+      {/* 신문 1면 느낌의 양피지 */}
+      <article className="parchment overflow-hidden rounded-sm">
+        <header className="px-4 pt-5 text-center sm:px-6">
+          <p className="font-display text-[10px] tracking-[0.3em] text-slate-400">마법 증권가 소식지 · 실시간 발행</p>
+          <h1 className="font-display mt-1 text-4xl font-bold tracking-wider text-slate-50 sm:text-5xl">예언자 일보</h1>
+          <div className="mt-3 border-y-[3px] border-double border-slate-300/70 py-1 text-[11px] text-slate-400 sm:text-xs">
+            <span>{mastheadDate.format(now)}</span>
+            <span className="mx-2" aria-hidden>
+              ✦
+            </span>
+            <span>호그와트 증권가의 소식이 실시간으로 도착해요</span>
+          </div>
+        </header>
         {items === null ? (
           <Spinner />
         ) : items.length === 0 ? (
           <Empty>아직 조용한 하루예요.</Empty>
         ) : (
-          <ul className="divide-y divide-white/5">
+          <ul className="divide-y divide-slate-300/25 px-1 pb-2 sm:px-2">
             {items.map((item) => (
-              <li key={item.key} className="flex gap-3 px-4 py-3 text-sm">
+              <li key={item.key} className="flex gap-3 px-3 py-3 text-sm">
                 {item.kind === "event" ? <EventItem row={item.row} /> : <TradeItem row={item.row} />}
                 <span className="ml-auto shrink-0 text-xs text-slate-500">{formatRelativeTime(item.at, now)}</span>
               </li>
             ))}
           </ul>
         )}
-      </Card>
+      </article>
     </div>
   );
 }
 
 function StockLink({ id, name }: { id: string; name: string }) {
   return (
-    <Link href={`/stocks/${encodeURIComponent(id)}`} className="font-semibold text-slate-100 hover:text-gold">
+    <Link href={`/stocks/${encodeURIComponent(id)}`} className="font-display font-bold text-slate-100 underline-offset-2 hover:text-gold hover:underline">
       {name}
     </Link>
   );
