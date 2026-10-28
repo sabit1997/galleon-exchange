@@ -120,6 +120,11 @@ export function NewsFeed() {
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "market_news", filter: `guild_id=eq.${guildId}` }, (p) => {
         setItems((prev) => merge(prev ?? [], [fromNews(p.new as MarketNews)]));
       })
+      // 봇이 Claude 로 기사 문구를 다시 쓰면 headline 이 UPDATE 로 온다 — 자리에서 바꾼다
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "market_news", filter: `guild_id=eq.${guildId}` }, (p) => {
+        const item = fromNews(p.new as MarketNews);
+        setItems((prev) => prev?.map((i) => (i.key === item.key ? item : i)) ?? prev);
+      })
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "market_events", filter: `guild_id=eq.${guildId}` }, (p) => {
         setItems((prev) => merge(prev ?? [], [fromEvent(p.new as MarketEvent)]));
       })

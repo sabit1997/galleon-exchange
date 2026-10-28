@@ -132,6 +132,10 @@ export function useStockData(id: string): StockData {
         setNews((prev) => (prev && !prev.some((n) => n.id === row.id) ? [row, ...prev].slice(0, NEWS_LIMIT) : prev));
         if (row.kind === "earnings" || row.kind === "dividend") void loadEarnings();
       })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "market_news", filter: `target=eq.${id}` }, (payload) => {
+        const row = payload.new as MarketNews;
+        setNews((prev) => prev?.map((n) => (n.id === row.id ? row : n)) ?? prev);
+      })
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "market_events", filter: `discord_id=eq.${id}` }, (payload) => {
         const row = payload.new as MarketEvent;
         if (row.guild_id !== guildId) return;
