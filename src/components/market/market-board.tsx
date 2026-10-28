@@ -145,6 +145,10 @@ function useLatestNews(limit: number): MarketNews[] | null {
         const row = p.new as MarketNews;
         setNews((prev) => [row, ...(prev ?? []).filter((n) => n.id !== row.id)].slice(0, limit));
       })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "market_news", filter: `guild_id=eq.${guildId}` }, (p) => {
+        const row = p.new as MarketNews;
+        setNews((prev) => prev?.map((n) => (n.id === row.id ? row : n)) ?? prev);
+      })
       .subscribe((status) => {
         if (status !== "CLOSED") void load();
       });
