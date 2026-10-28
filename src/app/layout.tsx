@@ -1,23 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { Cinzel, Gowun_Batang } from "next/font/google";
+import { GeistSans } from "geist/font/sans";
 import { Gate } from "@/components/layout/gate";
 import { Header } from "@/components/layout/header";
 import { SessionProvider } from "@/components/providers/session-provider";
+// 한글은 프리텐다드(동적 서브셋 — 화면에 쓰인 글자 묶음만 받아 온다), 영문·숫자는 Geist.
+// 둘 다 패키지에 들어 있는 로컬 파일이라 빌드할 때 네트워크가 필요 없다.
+import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
 import "./globals.css";
-
-const cinzel = Cinzel({
-  subsets: ["latin"],
-  variable: "--font-cinzel",
-  display: "swap",
-});
-
-// 한글 글리프는 unicode-range 로 필요할 때 받아 오므로 latin 만 미리 불러온다
-const gowun = Gowun_Batang({
-  weight: ["400", "700"],
-  subsets: ["latin"],
-  variable: "--font-gowun",
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: "갈레온 증권 · 카르텔 마법학교",
@@ -25,12 +14,12 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#120e0b",
+  themeColor: "#070815",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ko" className={`${cinzel.variable} ${gowun.variable} h-full antialiased`}>
+    <html lang="ko" className={`${GeistSans.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
         <SessionProvider>
           <Gate header={<Header />}>{children}</Gate>

@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { EventLabel, eventIcon } from "@/components/market/event-text";
 import { useMarket } from "@/components/providers/market-provider";
 import { useMemberSession } from "@/components/providers/session-provider";
-import { Empty, Spinner } from "@/components/ui/card";
+import { Card, Empty, SkeletonRows } from "@/components/ui/card";
 import { HouseBadge } from "@/components/ui/house-badge";
 import { useNow } from "@/hooks/use-now";
 import type { MarketEvent, Trade } from "@/lib/database.types";
@@ -65,41 +65,47 @@ export function NewsFeed() {
 
   return (
     <div>
-      {/* 신문 1면 느낌의 양피지 */}
-      <article className="parchment overflow-hidden rounded-sm">
-        <header className="px-4 pt-5 text-center sm:px-6">
-          <p className="font-display text-[10px] tracking-[0.3em] text-slate-400">마법 증권가 소식지 · 실시간 발행</p>
-          <h1 className="font-display mt-1 text-4xl font-bold tracking-wider text-slate-50 sm:text-5xl">예언자 일보</h1>
-          <div className="mt-3 border-y-[3px] border-double border-slate-300/70 py-1 text-[11px] text-slate-400 sm:text-xs">
-            <span>{mastheadDate.format(now)}</span>
-            <span className="mx-2" aria-hidden>
-              ✦
-            </span>
-            <span>호그와트 증권가의 소식이 실시간으로 도착해요</span>
-          </div>
-        </header>
+      <header className="mb-6 animate-fade-up">
+        <p className="mb-1.5 inline-flex items-center gap-2 text-xs font-semibold tracking-wide text-rise">
+          <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-rise animate-pulse-dot" />
+          실시간 발행
+        </p>
+        <h1 className="text-[1.75rem] font-bold leading-tight text-slate-50 sm:text-3xl">예언자 일보</h1>
+        <p className="mt-2 text-sm text-slate-400">
+          {mastheadDate.format(now)} · 마법 증권가의 소식이 실시간으로 도착해요
+        </p>
+      </header>
+      <Card className="!p-0 overflow-hidden">
         {items === null ? (
-          <Spinner />
+          <SkeletonRows />
         ) : items.length === 0 ? (
           <Empty>아직 조용한 하루예요.</Empty>
         ) : (
-          <ul className="divide-y divide-slate-300/25 px-1 pb-2 sm:px-2">
+          <ul className="divide-y divide-white/5">
             {items.map((item) => (
-              <li key={item.key} className="flex gap-3 px-3 py-3 text-sm">
+              <li key={item.key} className="flex gap-3 px-4 py-3.5 text-sm sm:px-5">
                 {item.kind === "event" ? <EventItem row={item.row} /> : <TradeItem row={item.row} />}
-                <span className="ml-auto shrink-0 text-xs text-slate-500">{formatRelativeTime(item.at, now)}</span>
+                <span className="ml-auto shrink-0 pt-0.5 text-xs text-slate-500">{formatRelativeTime(item.at, now)}</span>
               </li>
             ))}
           </ul>
         )}
-      </article>
+      </Card>
     </div>
+  );
+}
+
+function IconTile({ children, tone = "bg-white/[0.05]" }: { children: React.ReactNode; tone?: string }) {
+  return (
+    <span aria-hidden className={`grid h-10 w-10 shrink-0 place-items-center rounded-2xl text-lg ${tone}`}>
+      {children}
+    </span>
   );
 }
 
 function StockLink({ id, name }: { id: string; name: string }) {
   return (
-    <Link href={`/stocks/${encodeURIComponent(id)}`} className="font-display font-bold text-slate-100 underline-offset-2 hover:text-gold hover:underline">
+    <Link href={`/stocks/${encodeURIComponent(id)}`} className="font-semibold text-slate-50 underline-offset-4 hover:text-magic-bright hover:underline">
       {name}
     </Link>
   );
@@ -108,15 +114,13 @@ function StockLink({ id, name }: { id: string; name: string }) {
 function EventItem({ row }: { row: MarketEvent }) {
   return (
     <>
-      <span aria-hidden className="text-lg leading-5">
-        {eventIcon(row.type)}
-      </span>
+      <IconTile>{eventIcon(row.type)}</IconTile>
       <div className="min-w-0">
         <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <StockLink id={row.discord_id} name={row.display_name} />
           <HouseBadge house={row.house} />
         </p>
-        <p className="mt-0.5 text-slate-300">
+        <p className="mt-1 text-slate-300">
           <EventLabel event={row} />
         </p>
       </div>
@@ -129,13 +133,11 @@ function TradeItem({ row }: { row: Trade }) {
   const buy = row.side === "buy";
   return (
     <>
-      <span aria-hidden className="text-lg leading-5">
-        {buy ? "🛒" : "💸"}
-      </span>
-      <p className="min-w-0 text-slate-300">
-        <span className="text-slate-100">{nameOf(row.owner_id)}</span> 님이 <StockLink id={row.stock_id} name={nameOf(row.stock_id)} />{" "}
+      <IconTile tone={buy ? "bg-rise/10" : "bg-fall/10"}>{buy ? "🛒" : "💸"}</IconTile>
+      <p className="min-w-0 self-center leading-relaxed text-slate-300">
+        <span className="font-medium text-slate-100">{nameOf(row.owner_id)}</span> 님이 <StockLink id={row.stock_id} name={nameOf(row.stock_id)} />{" "}
         {row.qty.toLocaleString("ko-KR")}주를{" "}
-        <span className={buy ? "text-rise" : "text-fall"}>{buy ? "매수" : "매도"}</span>했어요{" "}
+        <span className={`font-semibold ${buy ? "text-rise" : "text-fall"}`}>{buy ? "매수" : "매도"}</span>했어요{" "}
         <span className="text-xs text-slate-500 tabular-nums">@ {formatPrice(row.exec_price)}</span>
       </p>
     </>

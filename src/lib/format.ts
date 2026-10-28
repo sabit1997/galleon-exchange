@@ -63,11 +63,39 @@ export function houseKey(house: string | null | undefined): HouseKey {
   return "none";
 }
 
-/** 기숙사 색 — 빨강/금, 초록/은, 파랑/청동, 노랑/검정 */
-export const HOUSE_STYLES: Record<HouseKey, { badge: string; label: string }> = {
-  gryffindor: { badge: "bg-[#7a1620] text-[#f3cf6b] ring-[#d4a537]/70", label: "그리핀도르" },
-  slytherin: { badge: "bg-[#14482f] text-[#dfe4e8] ring-[#a9b4bd]/70", label: "슬리데린" },
-  ravenclaw: { badge: "bg-[#1b2f66] text-[#e2b07a] ring-[#b07a45]/70", label: "래번클로" },
-  hufflepuff: { badge: "bg-[#e9b923] text-[#1a1408] ring-[#1a1408]/60", label: "후플푸프" },
-  none: { badge: "bg-[#3a3128] text-[#e9dcc0] ring-[#9a876a]/50", label: "무소속" },
+/**
+ * 기숙사 색 — 빨강/금, 초록/은, 파랑/청동, 노랑/검정을 다크 배경용 모던 팔레트로.
+ * badge: 은은한 칩, dot: 두 가지 기숙사 색 그라데이션, avatar: 이니셜 아바타 배경.
+ */
+export const HOUSE_STYLES: Record<HouseKey, { badge: string; dot: string; avatar: string; label: string }> = {
+  gryffindor: {
+    badge: "bg-[#ff5a5f]/12 text-[#ffb3ae] ring-[#ff5a5f]/25",
+    dot: "bg-[linear-gradient(135deg,#ff5a5f_45%,#f5c451_55%)]",
+    avatar: "bg-[linear-gradient(135deg,#ff5a5f,#b3243a_60%,#f5c451)] text-white",
+    label: "그리핀도르",
+  },
+  slytherin: {
+    badge: "bg-[#2ecc8f]/12 text-[#8ff0c4] ring-[#2ecc8f]/25",
+    dot: "bg-[linear-gradient(135deg,#2ecc8f_45%,#c9d1d9_55%)]",
+    avatar: "bg-[linear-gradient(135deg,#2ecc8f,#11734f_60%,#c9d1d9)] text-white",
+    label: "슬리데린",
+  },
+  ravenclaw: {
+    badge: "bg-[#4f7cff]/14 text-[#aec4ff] ring-[#4f7cff]/28",
+    dot: "bg-[linear-gradient(135deg,#4f7cff_45%,#d08b4f_55%)]",
+    avatar: "bg-[linear-gradient(135deg,#4f7cff,#243f9e_60%,#d08b4f)] text-white",
+    label: "래번클로",
+  },
+  hufflepuff: {
+    badge: "bg-[#ffcc33]/12 text-[#ffe08a] ring-[#ffcc33]/25",
+    dot: "bg-[linear-gradient(135deg,#ffcc33_45%,#1c1c22_55%)] ring-1 ring-[#ffcc33]/40",
+    avatar: "bg-[linear-gradient(135deg,#ffd84d,#e0a800_60%,#2a2520)] text-[#1c1708]",
+    label: "후플푸프",
+  },
+  none: {
+    badge: "bg-white/6 text-slate-300 ring-white/10",
+    dot: "bg-slate-500",
+    avatar: "bg-[linear-gradient(135deg,#6b7095,#33365a)] text-white",
+    label: "무소속",
+  },
 };
