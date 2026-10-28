@@ -69,7 +69,7 @@ export function StockInfo({
 
   return (
     <div>
-      <dl className="grid grid-cols-2 gap-x-4 text-xs sm:grid-cols-3">
+      <dl className="grid grid-cols-2 gap-x-6 text-xs">
         {rows.map((r) => (
           <div key={r.label ?? r.k} className="flex items-center justify-between gap-2 border-b border-white/[0.04] py-1.5">
             <dt className="shrink-0 text-slate-500">

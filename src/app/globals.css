@@ -61,6 +61,7 @@
 
 html {
   -webkit-tap-highlight-color: transparent;
+  scrollbar-gutter: stable;
 }
 
 body {
@@ -151,7 +152,7 @@ h3 {
 
   /* 유리 막대 (헤더·하단 내비) */
   .glass {
-    background: rgb(10 11 26 / 0.72);
+    background: rgb(10 11 26 / 0.94);
     backdrop-filter: blur(18px) saturate(160%);
     -webkit-backdrop-filter: blur(18px) saturate(160%);
   }
