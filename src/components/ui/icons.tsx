@@ -67,6 +67,15 @@ export function NewsIcon({ className = "" }: IconProps) {
   );
 }
 
+export function BookIcon({ className = "" }: IconProps) {
+  return (
+    <svg aria-hidden viewBox="0 0 24 24" className={`h-5 w-5 ${className}`} {...line}>
+      <path d="M12 6.5C10.2 5 7.6 4.5 4 4.5v13c3.6 0 6.2.5 8 2 1.8-1.5 4.4-2 8-2v-13c-3.6 0-6.2.5-8 2Z" />
+      <path d="M12 6.5v13" />
+    </svg>
+  );
+}
+
 export function TrophyIcon({ className = "" }: IconProps) {
   return (
     <svg aria-hidden viewBox="0 0 24 24" className={`h-5 w-5 ${className}`} {...line}>
