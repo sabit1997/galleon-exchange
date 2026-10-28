@@ -18,7 +18,7 @@ type MarketContextValue = {
   config: MarketConfig | null;
   effects: Map<string, EventEffect>;
   stocks: Map<string, LiveStock>;
-  /** discord_id → 표시 이름 (상장 안 된 사람은 없음) */
+  /** discord_id → 표시 이름 (종목 이름 → 계좌 이름(서버 닉네임) → 익명) */
   nameOf: (discordId: string) => string;
   reload: () => void;
 };
@@ -39,6 +39,8 @@ export function MarketProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [version, setVersion] = useState(0);
+  // 종목이 없는 계좌 주인(기숙사 미배정 · 사감)의 서버 닉네임. 매매 소식 이름표용.
+  const [accountNames, setAccountNames] = useState<Map<string, string>>(new Map());
 
   const loadStocks = useCallback(async () => {
     const { data, error: err } = await supabase.from("stocks").select("*").eq("guild_id", guildId);
@@ -61,12 +63,15 @@ export function MarketProvider({ children }: { children: React.ReactNode }) {
       setConfig(cfgRes.data ?? null);
       setEffects(new Map((effRes.data ?? []).map((e) => [e.type, e])));
       await loadStocks();
-      if (!cancelled) setLoading(false);
+      const namesRes = await supabase.rpc("account_names", { p_guild: guildId });
+      if (cancelled) return;
+      if (!namesRes.error) setAccountNames(new Map(namesRes.data.map((r) => [r.discord_id, r.display_name])));
+      setLoading(false);
     })();
     return () => {
       cancelled = true;
     };
-  }, [supabase, loadStocks, version]);
+  }, [supabase, guildId, loadStocks, version]);
 
   // 주가 실시간 반영. (재)연결될 때마다 전체를 다시 읽어 놓친 변경을 메운다.
   useEffect(() => {
@@ -101,7 +106,10 @@ export function MarketProvider({ children }: { children: React.ReactNode }) {
     };
   }, [supabase, guildId, loadStocks]);
 
-  const nameOf = useCallback((id: string) => stocks.get(id)?.display_name ?? "익명의 마법사", [stocks]);
+  const nameOf = useCallback(
+    (id: string) => stocks.get(id)?.display_name ?? accountNames.get(id) ?? "익명의 마법사",
+    [stocks, accountNames],
+  );
   const reload = useCallback(() => setVersion((v) => v + 1), []);
 
   const value = useMemo(
