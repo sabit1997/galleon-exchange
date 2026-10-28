@@ -64,11 +64,11 @@ html {
 }
 
 body {
+  /* 증권 앱처럼 차분한 바탕 — 마법학교 밤하늘은 위쪽에만 은은하게 남긴다 */
   background-color: var(--color-ink);
   background-image:
-    radial-gradient(1100px 600px at 10% -10%, rgb(111 92 255 / 0.18), transparent 60%),
-    radial-gradient(900px 520px at 100% 0%, rgb(56 189 248 / 0.1), transparent 60%),
-    radial-gradient(1000px 700px at 50% 110%, rgb(168 85 247 / 0.1), transparent 60%);
+    radial-gradient(900px 420px at 15% -12%, rgb(111 92 255 / 0.1), transparent 60%),
+    radial-gradient(700px 380px at 100% -8%, rgb(56 189 248 / 0.05), transparent 60%);
   background-attachment: fixed;
   color: var(--color-slate-200);
   font-family: var(--font-sans);
@@ -79,7 +79,7 @@ body {
   overflow-wrap: break-word;
 }
 
-/* 별 반짝임 — 이미지 없이 그라데이션으로 */
+/* 별 반짝임 — 화면 맨 위에만 아주 옅게 */
 body::before {
   content: "";
   position: fixed;
@@ -87,29 +87,19 @@ body::before {
   z-index: -1;
   pointer-events: none;
   background-image:
-    radial-gradient(1px 1px at 23px 41px, rgb(255 255 255 / 0.7), transparent 60%),
-    radial-gradient(1px 1px at 151px 97px, rgb(196 186 255 / 0.6), transparent 60%),
-    radial-gradient(1.5px 1.5px at 87px 173px, rgb(255 226 154 / 0.55), transparent 60%),
-    radial-gradient(1px 1px at 203px 211px, rgb(255 255 255 / 0.45), transparent 60%),
-    radial-gradient(1px 1px at 261px 33px, rgb(125 211 252 / 0.5), transparent 60%);
+    radial-gradient(1px 1px at 23px 41px, rgb(255 255 255 / 0.6), transparent 60%),
+    radial-gradient(1px 1px at 151px 97px, rgb(196 186 255 / 0.5), transparent 60%),
+    radial-gradient(1.5px 1.5px at 87px 173px, rgb(255 226 154 / 0.45), transparent 60%),
+    radial-gradient(1px 1px at 261px 33px, rgb(125 211 252 / 0.4), transparent 60%);
   background-size: 290px 260px;
-  mask-image: linear-gradient(to bottom, black, transparent 70%);
+  mask-image: linear-gradient(to bottom, black, transparent 35%);
+  opacity: 0.45;
   animation: twinkle 6s ease-in-out infinite alternate;
 }
 
-/* 천천히 흐르는 오로라 */
+/* 예전 오로라 레이어는 쓰지 않는다 (숫자 가독성 우선) */
 body::after {
-  content: "";
-  position: fixed;
-  inset: -20% -10% auto;
-  height: 70vh;
-  z-index: -1;
-  pointer-events: none;
-  background:
-    radial-gradient(40% 50% at 30% 40%, rgb(124 108 255 / 0.16), transparent 70%),
-    radial-gradient(35% 45% at 70% 30%, rgb(45 212 191 / 0.08), transparent 70%);
-  filter: blur(40px);
-  animation: aurora 18s ease-in-out infinite alternate;
+  content: none;
 }
 
 h1,
@@ -217,6 +207,125 @@ h3 {
     box-shadow: 0 0 0 4px rgb(155 140 255 / 0.15);
   }
 
+  /* ── 증권 앱 화면 요소 ── */
+
+  /* 평평한 데이터 패널 (시세표 · 잔고표) */
+  .sheet {
+    background: rgb(255 255 255 / 0.025);
+    border: 1px solid rgb(255 255 255 / 0.06);
+  }
+
+  /* 데이터 표: 고정폭 숫자 · 촘촘한 줄 간격 */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .data-table th {
+    padding: 0.5rem 0.625rem;
+    font-size: 11.5px;
+    font-weight: 500;
+    color: var(--color-slate-500);
+    text-align: right;
+    white-space: nowrap;
+    border-bottom: 1px solid rgb(255 255 255 / 0.06);
+    background: rgb(255 255 255 / 0.015);
+  }
+  .data-table td {
+    padding: 0.55rem 0.625rem;
+    text-align: right;
+    white-space: nowrap;
+    font-family: var(--font-num);
+    font-variant-numeric: tabular-nums lining-nums;
+    border-bottom: 1px solid rgb(255 255 255 / 0.04);
+  }
+  .data-table th:first-child,
+  .data-table td:first-child {
+    text-align: left;
+  }
+  .data-table tbody tr:last-child td {
+    border-bottom: 0;
+  }
+  .data-table tbody tr {
+    transition: background-color 0.12s ease;
+  }
+  .data-table tbody tr:hover {
+    background: rgb(255 255 255 / 0.03);
+  }
+
+  /* 표가 넓을 때 표 안에서만 가로 스크롤 (페이지는 스크롤되지 않는다) */
+  .scroll-x {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+  .scroll-x::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* 밑줄 탭 */
+  .tab {
+    position: relative;
+    padding: 0.7rem 0.15rem;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-slate-500);
+    white-space: nowrap;
+    transition: color 0.15s ease;
+  }
+  .tab:hover {
+    color: var(--color-slate-200);
+  }
+  .tab[aria-selected="true"] {
+    color: var(--color-slate-50);
+  }
+  .tab[aria-selected="true"]::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 -1px 0;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--color-slate-50);
+  }
+
+  /* 필터 칩 */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    border-radius: 999px;
+    border: 1px solid rgb(255 255 255 / 0.08);
+    background: rgb(255 255 255 / 0.03);
+    padding: 0.3rem 0.75rem;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--color-slate-400);
+    white-space: nowrap;
+    transition:
+      background-color 0.15s ease,
+      color 0.15s ease,
+      border-color 0.15s ease;
+  }
+  .chip:hover {
+    color: var(--color-slate-100);
+  }
+  .chip[aria-pressed="true"] {
+    background: var(--color-slate-100);
+    border-color: var(--color-slate-100);
+    color: var(--color-ink);
+    font-weight: 600;
+  }
+
+  /* 흐르는 뉴스 띠 */
+  .marquee {
+    display: flex;
+    width: max-content;
+    animation: marquee var(--marquee-duration, 60s) linear infinite;
+  }
+  .marquee:hover {
+    animation-play-state: paused;
+  }
+
   /* 로딩 스켈레톤 */
   .skeleton {
     border-radius: 0.5rem;
@@ -228,10 +337,10 @@ h3 {
 
 @keyframes twinkle {
   from {
-    opacity: 0.35;
+    opacity: 0.25;
   }
   to {
-    opacity: 0.75;
+    opacity: 0.5;
   }
 }
 
@@ -283,6 +392,15 @@ h3 {
   }
 }
 
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
 @keyframes float {
   0%,
   100% {
@@ -325,8 +443,8 @@ h3 {
 
 @media (prefers-reduced-motion: reduce) {
   body::before,
-  body::after,
   .text-aurora,
+  .marquee,
   .float,
   .skeleton,
   .flash-up,

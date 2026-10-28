@@ -31,7 +31,7 @@ export function Gate({ header, children }: { header: React.ReactNode; children: 
         <MarketProvider>
           <AccountProvider>
             {header}
-            <main className="mx-auto w-full max-w-5xl flex-1 px-4 pb-28 pt-6 sm:pb-12 sm:pt-8">{children}</main>
+            <main className="mx-auto w-full max-w-5xl flex-1 px-4 pb-28 pt-5 md:pb-12 md:pt-6">{children}</main>
           </AccountProvider>
         </MarketProvider>
       );
@@ -48,13 +48,13 @@ const ghostBtn = "pressable rounded-2xl border border-white/10 bg-white/[0.03] p
 
 const RISE_EVENTS = [
   { icon: "📚", label: "교시 완주" },
-  { icon: "🙋", label: "출석" },
   { icon: "✨", label: "황금 스니치 포획" },
   { icon: "🥚", label: "황금 알 획득" },
+  { icon: "🕯️", label: "복귀" },
 ];
 const FALL_EVENTS = [
-  { icon: "⚠️", label: "집중 경고" },
   { icon: "🚫", label: "벌점" },
+  { icon: "📉", label: "어닝 쇼크" },
 ];
 
 function Landing() {

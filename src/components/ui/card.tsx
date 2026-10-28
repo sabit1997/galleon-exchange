@@ -1,13 +1,13 @@
 export function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <section className={`panel rounded-3xl p-5 ${className}`}>{children}</section>;
+  return <section className={`panel rounded-2xl p-4 sm:p-5 ${className}`}>{children}</section>;
 }
 
 export function PageTitle({ title, subtitle, eyebrow }: { title: string; subtitle?: string; eyebrow?: string }) {
   return (
-    <header className="mb-6 animate-fade-up">
-      {eyebrow && <p className="mb-1.5 text-xs font-semibold tracking-wide text-magic">{eyebrow}</p>}
-      <h1 className="text-[1.75rem] font-bold leading-tight text-slate-50 sm:text-3xl">{title}</h1>
-      {subtitle && <p className="mt-2 text-sm leading-relaxed text-slate-400">{subtitle}</p>}
+    <header className="mb-5 animate-fade-up">
+      {eyebrow && <p className="mb-1 text-xs font-semibold tracking-wide text-magic">{eyebrow}</p>}
+      <h1 className="text-[1.5rem] font-bold leading-tight text-slate-50 sm:text-[1.75rem]">{title}</h1>
+      {subtitle && <p className="mt-1.5 text-[13px] leading-relaxed text-slate-400">{subtitle}</p>}
     </header>
   );
 }
