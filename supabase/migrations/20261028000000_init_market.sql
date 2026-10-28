@@ -16,7 +16,7 @@ create table public.market_config (
   fee_rate           numeric not null default 0.01,   -- 매매 수수료 (소멸 = 갈레온 소비처)
   daily_deposit_cap  bigint  not null default 100,    -- 하루(KST) 입금 한도
   base_price         numeric not null default 10,     -- 신규 상장가 · 평균 회귀 목표
-  min_price          numeric not null default 1,
+  min_price          numeric not null default 5,    -- 너무 싸면 1주 매도가 수수료에 다 먹힌다
   reversion_rate     numeric not null default 0.05,   -- 매일 기준가와의 격차 중 이만큼 되돌림
   trade_impact       numeric not null default 0.002,  -- 1주당 가격 충격
   max_trade_impact   numeric not null default 0.05,
@@ -100,7 +100,9 @@ create table public.holdings (
   guild_id    text not null,
   owner_id    text not null,
   stock_id    text not null,
-  qty         integer not null check (qty > 0),
+  -- 전량 매도해도 행을 지우지 않고 0 으로 둔다. Realtime DELETE 는 RLS 를 거치지 않아
+  -- 누가 무엇을 팔았는지(기본 키)가 구독자 전원에게 새기 때문.
+  qty         integer not null check (qty >= 0),
   cost_basis  bigint not null,
   primary key (guild_id, owner_id, stock_id)
 );
@@ -158,6 +160,10 @@ $$;
 create function public.handle_new_user() returns trigger
 language plpgsql security definer set search_path = public as $$
 begin
+  -- 디스코드 외 로그인은 discord id 가 없다. 프로필 없이 두면 시장에 입장하지 못한다.
+  if coalesce(new.raw_user_meta_data->>'provider_id', new.raw_user_meta_data->>'sub') is null then
+    return new;
+  end if;
   insert into public.profiles (user_id, discord_id, display_name, avatar_url)
   values (
     new.id,
@@ -242,7 +248,7 @@ begin
   end loop;
 end $$;
 
-create extension if not exists pg_cron;
+create extension if not exists pg_cron with schema pg_catalog;
 select cron.schedule('market-daily-reversion', '0 15 * * *', 'select public.apply_daily_reversion()');
 
 -- ───────────────────────────── 매매 (사이트) ─────────────────────────────
@@ -267,7 +273,8 @@ declare
   trade_id bigint;
 begin
   if me is null then raise exception 'not_logged_in'; end if;
-  if p_side not in ('buy', 'sell') then raise exception 'bad_side'; end if;
+  if not public.is_guild_member(p_guild) then raise exception 'not_member'; end if;
+  if p_side is null or p_side not in ('buy', 'sell') then raise exception 'bad_side'; end if;
   select * into cfg from public.market_config;
   if p_qty is null or p_qty < 1 or p_qty > cfg.max_trade_qty then raise exception 'bad_qty'; end if;
   if p_stock = me then raise exception 'self_trade'; end if;
@@ -305,14 +312,11 @@ begin
 
     update public.accounts set cash = cash + gross - fee, updated_at = now()
      where guild_id = p_guild and discord_id = me;
-    if h.qty = p_qty then
-      delete from public.holdings where guild_id = p_guild and owner_id = me and stock_id = p_stock;
-    else
-      update public.holdings
-         set qty = qty - p_qty,
-             cost_basis = cost_basis - round(cost_basis * p_qty::numeric / h.qty)
-       where guild_id = p_guild and owner_id = me and stock_id = p_stock;
-    end if;
+    update public.holdings
+       set qty = qty - p_qty,
+           cost_basis = case when h.qty = p_qty then 0
+                             else cost_basis - round(cost_basis * p_qty::numeric / h.qty) end
+     where guild_id = p_guild and owner_id = me and stock_id = p_stock;
   end if;
 
   update public.stocks set price = new_price, updated_at = now()
@@ -332,12 +336,13 @@ create function public.leaderboard(p_guild text)
 returns table (discord_id text, display_name text, cash bigint, stock_value bigint, net_worth bigint)
 language sql stable security definer set search_path = public as $$
   select a.discord_id,
-         coalesce(st.display_name, a.discord_id),
+         coalesce(st.display_name, pr.display_name, '익명의 마법사'),
          a.cash,
          coalesce(v.value, 0)::bigint,
          (a.cash + coalesce(v.value, 0))::bigint
     from public.accounts a
     left join public.stocks st on st.guild_id = a.guild_id and st.discord_id = a.discord_id
+    left join public.profiles pr on pr.discord_id = a.discord_id
     left join lateral (
       select floor(sum(h.qty * s.price)) as value
         from public.holdings h

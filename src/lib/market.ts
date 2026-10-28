@@ -18,7 +18,8 @@ export type TradeErrorCode =
   | "bad_qty"
   | "no_stock"
   | "not_logged_in"
-  | "bad_side";
+  | "bad_side"
+  | "not_member";
 
 export type TradePreview = {
   /** 가격 충격 비율 (예: 0.004) */
@@ -158,6 +159,7 @@ const ERROR_MESSAGES: Record<TradeErrorCode, string> = {
   no_stock: "상장되지 않은 학생이에요.",
   not_logged_in: "로그인이 필요해요. 다시 로그인해 주세요.",
   bad_side: "매수/매도 구분이 올바르지 않아요.",
+  not_member: "서버에서 한 교시 이상 공부하거나 /증권 입금 을 해야 거래할 수 있어요.",
 };
 
 const ERROR_CODES = Object.keys(ERROR_MESSAGES) as TradeErrorCode[];

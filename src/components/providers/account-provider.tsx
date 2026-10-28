@@ -25,7 +25,8 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
   const refresh = useCallback(async () => {
     const [acctRes, holdRes] = await Promise.all([
       supabase.from("accounts").select("*").eq("guild_id", guildId).eq("discord_id", me).maybeSingle(),
-      supabase.from("holdings").select("*").eq("guild_id", guildId).eq("owner_id", me),
+      // 전량 매도한 종목은 qty 0 으로 남는다 (마이그레이션 holdings 주석 참고).
+      supabase.from("holdings").select("*").eq("guild_id", guildId).eq("owner_id", me).gt("qty", 0),
     ]);
     if (!acctRes.error) {
       setCash(acctRes.data?.cash ?? 0);
@@ -37,7 +38,6 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // 계좌·보유는 내 것만 RLS 로 보인다. 변경 내용과 상관없이 다시 읽는 게 가장 단순하고 정확하다
-    // (holdings DELETE 이벤트에는 기본 키만 온다).
     const channel = supabase
       .channel(`account:${guildId}:${me}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "accounts", filter: `discord_id=eq.${me}` }, () => {
