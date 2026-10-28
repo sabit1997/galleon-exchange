@@ -9,7 +9,7 @@ import { useSession } from "@/components/providers/session-provider";
 import { Galleon, toneClass } from "@/components/ui/galleon";
 import { BookIcon, ChartIcon, LogoMark, LogoutIcon, NewsIcon, TrophyIcon, WalletIcon } from "@/components/ui/icons";
 import { HOUSE_STYLES, formatPct, houseKey } from "@/lib/format";
-import { changeRatio, direction } from "@/lib/market";
+import { changeRatio } from "@/lib/market";
 
 const NAV = [
   { href: "/", label: "시장", Icon: ChartIcon },
@@ -52,7 +52,7 @@ function NavLinks({ variant }: { variant: "top" | "bottom" }) {
   }
   return (
     <nav
-      className="glass fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 border-t border-white/8 px-1 pb-[env(safe-area-inset-bottom)] md:hidden"
+      className="glass fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-white/8 px-1 pb-[env(safe-area-inset-bottom)] md:hidden"
       aria-label="주 메뉴"
     >
       {NAV.map((item) => {
@@ -86,13 +86,12 @@ function IndexStrip() {
   if (scopes.length === 0) return null;
   return (
     <div className="hidden border-t border-white/5 md:block">
-      <ul className="mx-auto flex h-8 w-full max-w-5xl items-center gap-5 overflow-hidden px-4 text-[12px]" aria-label="지수 요약">
+      <ul className="mx-auto flex h-8 w-full max-w-6xl items-center gap-5 overflow-hidden px-4 text-[12px]" aria-label="지수 요약">
         {scopes.map((scope) => {
           const value = indexValue(scope);
           const open = indices.get(scope)?.day_open ?? 0;
           if (value == null) return null;
           const r = changeRatio(value, open);
-          const d = direction(r);
           const key = houseKey(scope);
           return (
             <li key={scope} className="flex shrink-0 items-center gap-1.5 whitespace-nowrap">
@@ -100,13 +99,12 @@ function IndexStrip() {
               <span className="text-slate-400">{scope === "all" ? "호그와트 종합" : HOUSE_STYLES[key].label}</span>
               <span className="font-semibold text-slate-100 tabular-nums">{value.toLocaleString("ko-KR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               <span className={`tabular-nums ${toneClass(r)}`}>
-                {d === "up" ? "▲" : d === "down" ? "▼" : ""}
                 {formatPct(r)}
               </span>
             </li>
           );
         })}
-        <li className="ml-auto shrink-0 text-slate-600">기준: 오늘 00:00 시가</li>
+        <li className="ml-auto hidden shrink-0 text-slate-600 2xl:block">기준: 오늘 00:00 시가</li>
       </ul>
     </div>
   );
@@ -117,8 +115,8 @@ export function Header() {
   const { cash, loading } = useAccount();
   return (
     <>
-      <header className="glass sticky top-0 z-20 border-b border-white/6">
-        <div className="mx-auto flex h-14 w-full max-w-5xl items-center gap-3 px-4 md:gap-5">
+      <header className="glass sticky top-0 z-40 border-b border-white/6">
+        <div className="mx-auto flex h-14 w-full max-w-6xl items-center gap-3 px-4 md:gap-5">
           <Link href="/" className="pressable flex shrink-0 items-center gap-2.5" aria-label="갈레온 증권 홈">
             <LogoMark className="!h-8 !w-8" />
             <span className="flex flex-col leading-tight">

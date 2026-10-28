@@ -32,13 +32,7 @@ export function toneClass(delta: number): string {
   return "text-slate-400";
 }
 
+/** 등락률. 부호(+/−)와 색으로 방향을 보여 준다 — ▲▼ 는 등락폭(전일대비)에만 붙인다 */
 export function ChangePct({ ratio, className = "" }: { ratio: number; className?: string }) {
-  const d = direction(ratio);
-  const arrow = d === "up" ? "▲" : d === "down" ? "▼" : "";
-  return (
-    <span className={`tabular-nums ${toneClass(ratio)} ${className}`}>
-      {arrow && <span className="mr-0.5 text-[0.75em]">{arrow}</span>}
-      {formatPct(ratio)}
-    </span>
-  );
+  return <span className={`tabular-nums ${toneClass(ratio)} ${className}`}>{formatPct(ratio)}</span>;
 }

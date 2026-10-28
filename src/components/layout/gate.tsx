@@ -31,7 +31,7 @@ export function Gate({ header, children }: { header: React.ReactNode; children: 
         <MarketProvider>
           <AccountProvider>
             {header}
-            <main className="mx-auto w-full max-w-5xl flex-1 px-4 pb-28 pt-5 md:pb-12 md:pt-6">{children}</main>
+            <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-28 pt-5 md:pb-12 md:pt-6">{children}</main>
           </AccountProvider>
         </MarketProvider>
       );

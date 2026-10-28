@@ -35,7 +35,7 @@ export function OrderBook({
         (book ?? []).map((l) => ({ ...l, price: Number(l.price), qty: Number(l.qty), orders: Number(l.orders) })),
         price,
         { lo, hi },
-        6,
+        4,
       ),
     [book, price, lo, hi],
   );
