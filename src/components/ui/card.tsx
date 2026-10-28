@@ -1,12 +1,15 @@
+import { Flourish } from "./ornament";
+
 export function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <section className={`rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-5 ${className}`}>{children}</section>;
+  return <section className={`panel rounded-2xl p-4 sm:p-5 ${className}`}>{children}</section>;
 }
 
 export function PageTitle({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
-    <header className="mb-4">
-      <h1 className="font-display text-2xl font-bold text-gold sm:text-3xl">{title}</h1>
-      {subtitle && <p className="mt-1 text-sm text-slate-400">{subtitle}</p>}
+    <header className="mb-5">
+      <h1 className="font-display gilded text-2xl font-bold sm:text-3xl">{title}</h1>
+      <Flourish className="mt-1.5" />
+      {subtitle && <p className="mt-1.5 text-sm text-slate-400">{subtitle}</p>}
     </header>
   );
 }
